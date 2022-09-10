@@ -1,48 +1,71 @@
-import differ from 'ansi-diff-stream'
-
-const lb = /\r?\n/
-
-export type EditorEvent = {
-  value: string
-  aborted: boolean
-}
+import readline, { Key } from 'readline'
+import { Logger } from './logger'
 
 export class Editor {
-  private out: differ.AnsiDiffStream
-  private aborted: boolean = false
-  private value: string = ''
+  private _x = 0
+  private _y = 0
+  private _txt = ''
+  private _int = readline.createInterface({ input: process.stdin, output: process.stdout, terminal: true, historySize: 0 })
 
-  private lines: string[]
+  constructor(private _logger: Logger) {}
 
-  constructor(text: string) {
-    this.out = differ()
-    this.out.pipe(process.stdout)
-    this.lines = text.split(lb)
+  public edit(fileContent: string): Promise<string> {
+    return new Promise<string>(async (resolve, reject) => {
+      this._txt = fileContent
+      this._init()
+      this._refresh()
+
+      process.stdin.on('keypress', (str: string, key: Key) => {
+        // if ctrl-c is pressed, abort
+        if (key.ctrl && key.name === 'c') {
+          this._cleanup()
+          resolve(fileContent)
+        }
+
+        if (key.name === 'up') {
+          this._y = Math.max(0, this._y - 1)
+        }
+        if (key.name === 'down') {
+          this._y += 1
+        }
+        if (key.name === 'left') {
+          this._x -= Math.max(0, this._x - 1)
+        }
+        if (key.name === 'right') {
+          this._x += 1
+        }
+
+        if (key.name === 'backspace') {
+          this._txt = this._txt.slice(0, this._x - 1) + this._txt.slice(this._x)
+          this._x -= 1
+        }
+        if (key.name === 'delete') {
+          this._txt = this._txt.slice(0, this._x) + this._txt.slice(this._x + 1)
+        }
+
+        // if a character is pressed, insert
+        if (str) {
+          this._txt = this._txt.slice(0, this._x) + str + this._txt.slice(this._x - 1)
+          this._x += 1
+        }
+
+        this._refresh()
+      })
+    })
   }
 
-  public on(event: string, cb: (event: EditorEvent) => void): this {
-    this.out.on(event, cb)
-    return this
+  private _init() {
+    readline.emitKeypressEvents(process.stdin)
+    process.stdin.setRawMode(true)
+    console.clear()
+    process.stdout.write(this._txt)
   }
 
-  public update = () => {
-    this.value = this.lines.join('\n')
-    this.emit()
+  private _refresh() {
+    process.stdout.cursorTo(this._x, this._y)
   }
 
-  private emit = () => {
-    const ev: EditorEvent = {
-      value: this.value,
-      aborted: !!this.aborted,
-    }
-    this.out.write(ev)
+  private _cleanup() {
+    this._int.close()
   }
 }
-
-const editor = (text: string) => {
-  const p = new Editor(text)
-  p.update()
-  return p
-}
-
-export default editor
