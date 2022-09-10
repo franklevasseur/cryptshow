@@ -2,7 +2,7 @@ import Prompt from 'prompt-password'
 import crypto from 'crypto'
 import fs from 'fs'
 import yargs from '@bpinternal/yargs-extra'
-import editor, { EditorEvent } from './editor'
+import { editor, LOREM_IPSUM } from './editor'
 import { Logger } from './logger'
 import { EFSError } from './errors'
 
@@ -107,15 +107,8 @@ void yargs
     'Edit file',
     (yargs) => yargs.positional('fileName', { type: 'string', demandOption: true }),
     async (argv) => {
-      logger.info('press ctrl+D to exit')
-      editor('Hello this is dog.')
-        .on('data', () => {})
-        .on('abort', () => {
-          logger.warn('changes aborted.')
-        })
-        .on('submit', (text: EditorEvent) => {
-          logger.info('changes saved.', text)
-        })
+      const updated = await editor(LOREM_IPSUM)
+      logger.info('content: \n' + updated)
     },
   )
   .help().argv

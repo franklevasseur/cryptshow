@@ -1,48 +1,19 @@
-import differ from 'ansi-diff-stream'
+export const LOREM_IPSUM = `Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+Sed non risus. Suspendisse lectus tortor, dignissim sit amet, adipiscing
+non, ultricies sed, dolor. Cras elementum ultrices diam. Maecenas ligula
+orci, pharetra pretium, feugiat eu, lobortis quis, pede.
+Phasellus molestie magna non est. Phasellus libero.
+Nullam sit amet turpis elementum ligula vehicula consequat.
+Morbi a ipsum. Integer a nibh. In quis justo.
+Maecenas rhoncus aliquam lacus. Morbi quis tortor id nulla ultrices aliquet.
+Maecenas leo odio, condimentum id, luctus nec, molestie sed, justo.
+Donec vitae sapien ut libero venenatis faucibus.
+Nullam justo. Aliquam quis turpis eget elit sodales scelerisque.
+Sed ante. Vivamus tortor.`
 
-const lb = /\r?\n/
-
-export type EditorEvent = {
-  value: string
-  aborted: boolean
-}
-
-export class Editor {
-  private out: differ.AnsiDiffStream
-  private aborted: boolean = false
-  private value: string = ''
-
-  private lines: string[]
-
-  constructor(text: string) {
-    this.out = differ()
-    this.out.pipe(process.stdout)
-    this.lines = text.split(lb)
-  }
-
-  public on(event: string, cb: (event: EditorEvent) => void): this {
-    this.out.on(event, cb)
-    return this
-  }
-
-  public update = () => {
-    this.value = this.lines.join('\n')
-    this.emit()
-  }
-
-  private emit = () => {
-    const ev: EditorEvent = {
-      value: this.value,
-      aborted: !!this.aborted,
-    }
-    this.out.write(ev)
-  }
-}
-
-const editor = (text: string) => {
-  const p = new Editor(text)
-  p.update()
-  return p
-}
+export const editor = (text: string): Promise<string> =>
+  new Promise<string>((resolve, reject) => {
+    resolve(text)
+  })
 
 export default editor

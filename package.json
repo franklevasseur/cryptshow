@@ -15,7 +15,6 @@
   },
   "devDependencies": {
     "typescript": "^4.8.2",
-    "@types/ansi-diff-stream": "^1.2.0",
     "@types/node": "^16.11.56"
   },
   "scripts": {
