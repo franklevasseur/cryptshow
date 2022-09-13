@@ -14,7 +14,7 @@
     yargs "^17.5.1"
     yn "^4.0.0"
 
-"@cronvel/get-pixels@^3.4.0":
+"@cronvel/get-pixels@^3.4.1":
   version "3.4.1"
   resolved "https://registry.yarnpkg.com/@cronvel/get-pixels/-/get-pixels-3.4.1.tgz#6028de81152e73870ebec0c254f6b727afbd9a34"
   integrity sha512-gB5C5nDIacLUdsMuW8YsM9SzK3vaFANe4J11CVXpovpy7bZUGrcJKmc6m/0gWG789pKr6XSZY2aEetjFvSRw5g==
@@ -36,10 +36,10 @@
   resolved "https://registry.yarnpkg.com/@types/node/-/node-16.11.56.tgz#dcbb617669481e158e0f1c6204d1c768cd675901"
   integrity sha512-aFcUkv7EddxxOa/9f74DINReQ/celqH8DiB3fRYgVDM2Xm5QJL8sl80QKuAnGvwAsMn+H3IFA6WCrQh1CY7m1A==
 
-"@types/terminal-kit@^1.34.1":
-  version "1.34.1"
-  resolved "https://registry.yarnpkg.com/@types/terminal-kit/-/terminal-kit-1.34.1.tgz#aa91900b7683c0efb5f4b5555dd0d76318980d85"
-  integrity sha512-AQ0SDq4AB7VsTwHaylnSKDvQcYmvA7KEahuI0Prv0HRweXYhzufTddqVejjiECgF7HdfoT+3XNzivuL3vlaSaQ==
+"@types/terminal-kit@^2.5.0":
+  version "2.5.0"
+  resolved "https://registry.yarnpkg.com/@types/terminal-kit/-/terminal-kit-2.5.0.tgz#638401f2afe43139310f3597cacacf414d4e8ebb"
+  integrity sha512-wqVSMb+ndx6XJt7gCkxdPZC8EPJpyjJo9kLhXcmidVuXWVTsOwwe/wGC/7Lxx1NUmAgZHqnS6s+oedGa4EXsGQ==
   dependencies:
     "@types/nextgen-events" "*"
 
@@ -331,7 +331,7 @@ choices-separator@^2.0.0:
     debug "^2.6.6"
     strip-color "^0.1.0"
 
-chroma-js@^2.1.0:
+chroma-js@^2.4.2:
   version "2.4.2"
   resolved "https://registry.yarnpkg.com/chroma-js/-/chroma-js-2.4.2.tgz#dffc214ed0c11fa8eefca2c36651d8e57cbfb2b0"
   integrity sha512-U9eDw6+wt7V8z5NncY2jJfZa+hUH8XEj8FQHgFJTrUFnJfXYf4Ml4adI2vXZOjqRDpFWtYVWypDfZwnJ+HIR4A==
@@ -456,11 +456,6 @@ escalade@^3.1.1:
   version "3.1.1"
   resolved "https://registry.yarnpkg.com/escalade/-/escalade-3.1.1.tgz#d8cfdc7000965c5a0174b4a82eaa5c0552742e40"
   integrity sha512-k0er2gUkLf8O0zKJiAhmkTnJlTvINGv7ygDNPbeIsX/TJjGJZHuh9B2UxbsaEkmlEo9MfhrSzmhIlhRlI2GXnw==
-
-exit-hook@^2.2.1:
-  version "2.2.1"
-  resolved "https://registry.yarnpkg.com/exit-hook/-/exit-hook-2.2.1.tgz#007b2d92c6428eda2b76e7016a34351586934593"
-  integrity sha512-eNTPlAD67BmP31LDINZ3U7HSF8l57TxOY2PmBJ1shpCvpnxBF93mWCE8YHBnXs8qiUZJc9WDcWIeC3a2HIAMfw==
 
 extend-shallow@^2.0.1:
   version "2.0.1"
@@ -717,7 +712,7 @@ ndarray@^1.0.13, ndarray@^1.0.19:
     iota-array "^1.0.0"
     is-buffer "^1.0.2"
 
-nextgen-events@^1.3.4:
+nextgen-events@^1.5.3:
   version "1.5.3"
   resolved "https://registry.yarnpkg.com/nextgen-events/-/nextgen-events-1.5.3.tgz#89a657720fffbfdef646f2769ac6fcc6c4f79789"
   integrity sha512-P6qw6kenNXP+J9XlKJNi/MNHUQ+Lx5K8FEcSfX7/w8KJdZan5+BB5MKzuNgL2RTjHG1Svg8SehfseVEp8zAqwA==
@@ -931,10 +926,10 @@ static-extend@^0.1.2:
     define-property "^0.2.5"
     object-copy "^0.1.0"
 
-string-kit@^0.11.9:
-  version "0.11.10"
-  resolved "https://registry.yarnpkg.com/string-kit/-/string-kit-0.11.10.tgz#1716b896a5077b2e3e856e409307d4f2e8999adc"
-  integrity sha512-ATVmIpMrqxPFNiNQTnmEeXzt3743O6DubJWh2MiAQV1ifKd4PcCjBcybCdb0ENnPO1T6asORK9nOpygn1BATag==
+string-kit@^0.17.3:
+  version "0.17.5"
+  resolved "https://registry.yarnpkg.com/string-kit/-/string-kit-0.17.5.tgz#565959e24e9357c7dcf0dc974a6d56169ec897bf"
+  integrity sha512-elbB2H2IH5W/4ZENdxTAH+pgAxP/EDhoajAoOzAMQsuANDa98JGFwcbwrUnYhTEEq8P6SfzL0+JdfjxHnjqrfA==
 
 string-width@^2.0.0:
   version "2.1.1"
@@ -1000,19 +995,19 @@ supports-color@^7.1.0:
   dependencies:
     has-flag "^4.0.0"
 
-terminal-kit@^1.31.4, terminal-kit@^1.34.4:
-  version "1.49.4"
-  resolved "https://registry.yarnpkg.com/terminal-kit/-/terminal-kit-1.49.4.tgz#11493f51032af6036ebe15ede19617f5d7e2f7ef"
-  integrity sha512-ehoNOk7xB/QBVX38P2kpoLip+s4Tlb6qYDBAoLg/rdRrrtRlDgs97a9MG0xU1IGq/Qpn47n1rwb5fWbM/Bprag==
+terminal-kit@^2.11.4:
+  version "2.11.4"
+  resolved "https://registry.yarnpkg.com/terminal-kit/-/terminal-kit-2.11.4.tgz#0e731aa41745b4b12bc100dd7157afa331bcaa4e"
+  integrity sha512-vPNjD+iUcBhVwibVLpgWD6rudFAb17GlKG4v8RknjsVPrGjBVd7+M67SKRI7pmkwMVAvdOrMCegrW8lPfh+yrQ==
   dependencies:
-    "@cronvel/get-pixels" "^3.4.0"
-    chroma-js "^2.1.0"
+    "@cronvel/get-pixels" "^3.4.1"
+    chroma-js "^2.4.2"
     lazyness "^1.2.0"
     ndarray "^1.0.19"
-    nextgen-events "^1.3.4"
+    nextgen-events "^1.5.3"
     seventh "^0.7.40"
-    string-kit "^0.11.9"
-    tree-kit "^0.7.0"
+    string-kit "^0.17.3"
+    tree-kit "^0.7.4"
 
 terminal-paginator@^2.0.2:
   version "2.0.2"
@@ -1022,13 +1017,6 @@ terminal-paginator@^2.0.2:
     debug "^2.6.6"
     extend-shallow "^2.0.1"
     log-utils "^0.2.1"
-
-termit@^0.4.4:
-  version "0.4.4"
-  resolved "https://registry.yarnpkg.com/termit/-/termit-0.4.4.tgz#49f3dee22328d07d93682405e934a9bfbbd5b9b1"
-  integrity sha512-Iy+5Qw1klG/i2ySUvh1swTx1pA7xOLsr5TOYvW+Wr9pYJ1f1vuT8Z40GOZeHYIoJLMuIkllZs1fQJjnhPDKbbg==
-  dependencies:
-    terminal-kit "^1.31.4"
 
 time-stamp@^1.0.1:
   version "1.1.0"
@@ -1049,7 +1037,7 @@ toggle-array@^1.0.1:
   dependencies:
     isobject "^3.0.0"
 
-tree-kit@^0.7.0:
+tree-kit@^0.7.4:
   version "0.7.4"
   resolved "https://registry.yarnpkg.com/tree-kit/-/tree-kit-0.7.4.tgz#d6c9dba3e06188952282f196657f6bbbb454a39a"
   integrity sha512-Of3tPmVs3b6BhzyUJ7t0olisf47kYr9qAm0XaUpURMjdBn6TwiVaaMuTFoKkkvPGojd9trKAHlrGGcGKcdR1DA==

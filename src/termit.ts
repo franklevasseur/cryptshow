@@ -17,13 +17,22 @@ type KeyData = {
   code: Buffer
 }
 
+type SelectionRegion = {
+  xmin: number
+  xmax: number
+  ymin: number
+  ymax: number
+}
+
 type TextBuffer = terminalKit.TextBuffer & {
   x: number
   y: number
   cx: number
   cy: number
   buffer: BufferElement[][]
+  selectionRegion: SelectionRegion | null
   backDelete: (x: number) => void
+  setSelectionRegion: (region: SelectionRegion) => void
 }
 
 const DEFAULT_STATUS_BAR_MESSAGE = 'Ctrl+C:exit'
@@ -187,6 +196,18 @@ export class Termit {
       case 'RIGHT':
         this.right()
         break
+      case 'SHIFT_RIGHT':
+        this.shiftRight()
+        break
+      case 'SHIFT_LEFT':
+        this.shiftLeft()
+        break
+      case 'SHIFT_UP':
+        this.shiftUp()
+        break
+      case 'SHIFT_DOWN':
+        this.shiftDown()
+        break
       case 'HOME':
         this.startOfLine()
         break
@@ -259,7 +280,8 @@ export class Termit {
     if (this.textBuffer.cx > this.textBuffer.buffer[this.textBuffer.cy].length - 1) {
       this.textBuffer.moveToEndOfLine()
     }
-    this.drawCursor()
+    this.textBuffer.selectionRegion = null
+    this.draw()
   }
 
   private down() {
@@ -269,29 +291,25 @@ export class Termit {
       if (this.textBuffer.cx > this.textBuffer.buffer[this.textBuffer.cy].length - 1) {
         this.textBuffer.moveToEndOfLine()
       }
-      this.drawCursor()
+      this.textBuffer.selectionRegion = null
+      this.draw()
     }
   }
 
   private left() {
     this.textBuffer.moveBackward(false)
-    this.drawCursor()
+    this.textBuffer.selectionRegion = null
+    this.draw()
   }
 
   private right() {
-    if (this.textBuffer.cx < this.getLine().length) {
-      this.textBuffer.moveRight()
-    } else if (this.textBuffer.getContentSize().height - 1 > this.textBuffer.cy) {
-      this.textBuffer.moveTo(0, this.textBuffer.cy + 1)
-    }
-    this.drawCursor()
+    this.textBuffer.moveForward(false)
+    this.textBuffer.selectionRegion = null
+    this.draw()
   }
 
   private getLine() {
-    return this.textBuffer.buffer[this.textBuffer.cy].reduce((acc, curr) => {
-      acc += curr.char.trim()
-      return acc
-    }, '')
+    return this.textBuffer.buffer[this.textBuffer.cy].map((x) => x.char).join('')
   }
 
   private startOfLine() {
@@ -344,5 +362,128 @@ export class Termit {
   private tab() {
     this.textBuffer.insert('\t')
     this.draw()
+  }
+
+  private shiftRight() {
+    const currentSelection: SelectionRegion = this.textBuffer.selectionRegion ?? this.emptySelection()
+    const { tail, head } = this.toPosition(currentSelection)
+    const cur: Position = { x: this.textBuffer.cx, y: this.textBuffer.cy }
+
+    let newSelection: SelectionRegion
+    if (this.getIdx(tail) >= this.getIdx(cur)) {
+      const newHead = this.getPos(this.getIdx(head) + 1)
+      newSelection = this.fromPosition({ tail, head: newHead })
+    } else {
+      const newTail = this.getPos(this.getIdx(tail) + 1)
+      newSelection = this.fromPosition({ tail: newTail, head })
+    }
+
+    this.textBuffer.setSelectionRegion(newSelection)
+    this.draw()
+  }
+
+  private shiftLeft() {
+    const currentSelection: SelectionRegion = this.textBuffer.selectionRegion ?? this.emptySelection()
+    const { tail, head } = this.toPosition(currentSelection)
+    const cur: Position = { x: this.textBuffer.cx, y: this.textBuffer.cy }
+
+    let newSelection: SelectionRegion
+    if (this.getIdx(head) <= this.getIdx(cur)) {
+      const newTail = this.getPos(this.getIdx(tail) - 1)
+      newSelection = this.fromPosition({ tail: newTail, head })
+    } else {
+      const newHead = this.getPos(this.getIdx(head) - 1)
+      newSelection = this.fromPosition({ tail, head: newHead })
+    }
+
+    this.textBuffer.setSelectionRegion(newSelection)
+    this.draw()
+  }
+
+  private shiftDown() {
+    const currentSelection: SelectionRegion = this.textBuffer.selectionRegion ?? this.emptySelection()
+    const { tail, head } = this.toPosition(currentSelection)
+    const cur: Position = { x: this.textBuffer.cx, y: this.textBuffer.cy }
+
+    let newSelection: SelectionRegion
+    if (this.getIdx(tail) >= this.getIdx(cur)) {
+      const newHead = { ...head, y: Math.min(this.textBuffer.getContentSize().height - 1, head.y + 1) }
+      newSelection = this.fromPosition({ tail, head: newHead })
+    } else {
+      const newTail = { ...tail, y: tail.y + 1 }
+      newSelection = this.fromPosition({ tail: newTail, head })
+    }
+
+    this.textBuffer.setSelectionRegion(newSelection)
+    this.draw()
+  }
+
+  private shiftUp() {
+    const currentSelection: SelectionRegion = this.textBuffer.selectionRegion ?? this.emptySelection()
+    const { tail, head } = this.toPosition(currentSelection)
+    const cur: Position = { x: this.textBuffer.cx, y: this.textBuffer.cy }
+
+    let newSelection: SelectionRegion
+    if (this.getIdx(head) <= this.getIdx(cur)) {
+      const newTail = { ...tail, y: Math.max(0, tail.y - 1) }
+      newSelection = this.fromPosition({ tail: newTail, head })
+    } else {
+      const newHead = { ...head, y: head.y - 1 }
+      newSelection = this.fromPosition({ tail, head: newHead })
+    }
+
+    this.textBuffer.setSelectionRegion(newSelection)
+    this.draw()
+  }
+
+  private emptySelection(): SelectionRegion {
+    return {
+      xmin: this.textBuffer.cx,
+      xmax: this.textBuffer.cx,
+      ymin: this.textBuffer.cy,
+      ymax: this.textBuffer.cy,
+    }
+  }
+
+  private toPosition(sel: SelectionRegion): { tail: Position; head: Position } {
+    let tail = { x: sel.xmin, y: sel.ymin }
+    let head = { x: sel.xmax, y: sel.ymax }
+    if (this.getIdx(tail) > this.getIdx(head)) {
+      ;[tail, head] = [head, tail]
+    }
+    return { tail, head }
+  }
+
+  private fromPosition({ tail, head }: { tail: Position; head: Position }): SelectionRegion {
+    if (this.getIdx(tail) > this.getIdx(head)) {
+      ;[tail, head] = [head, tail]
+    }
+    return {
+      xmin: tail.x,
+      xmax: head.x,
+      ymin: tail.y,
+      ymax: head.y,
+    }
+  }
+
+  private getIdx(pos: Position): number {
+    const n = this.textBuffer.buffer.slice(undefined, pos.y).reduce((acc, cur) => acc + cur.length, 0)
+    return n + pos.x
+  }
+
+  private getPos(idx: number): Position {
+    let x = 0
+    let y = 0
+    let n = 0
+    while (n < idx) {
+      if (x >= this.textBuffer.buffer[y].length) {
+        x = 0
+        y++
+      } else {
+        x++
+        n++
+      }
+    }
+    return { x, y }
   }
 }
