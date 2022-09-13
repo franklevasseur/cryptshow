@@ -1,23 +1,24 @@
-import Prompt from 'prompt-password'
+import prompts from 'prompts'
 import crypto from 'crypto'
 import fs from 'fs'
 import yargs from '@bpinternal/yargs-extra'
-import { editor, LOREM_IPSUM } from './editor'
 import { Logger } from './logger'
 import { EFSError } from './errors'
 import { Termit } from './termit'
+import wtfnode from 'wtfnode'
 
 const PWD_CHAR = '*'
 const ALGORITHM = 'aes-192-cbc'
 const SALT = 'salt'
 
-const getPwd = () => {
-  return new Prompt({
+const getPwd = async () => {
+  const { password } = await prompts({
     type: 'password',
     message: 'Enter your password please',
     name: 'password',
     mask: (input: string) => PWD_CHAR + new Array(String(input).length).join(PWD_CHAR),
-  }).run()
+  })
+  return password
 }
 
 const createKeyIv = (pwd: string) => {
@@ -108,8 +109,37 @@ void yargs
     'Edit file',
     (yargs) => yargs.positional('fileName', { type: 'string', demandOption: true }),
     async (argv) => {
-      const edited = await Termit.edit({ content: LOREM_IPSUM })
-      logger.info(edited)
+      const pwd = await getPwd()
+      const fileContent = fs.readFileSync(argv.fileName, 'utf8')
+      const decrypted = decrypt(fileContent, pwd)
+
+      let edited: string
+      try {
+        edited = await Termit.edit({ content: decrypted })
+      } catch (thrown) {
+        logger.error('Termit exited with error. File not saved.')
+        handleErr(thrown)
+        return
+      }
+
+      const { value } = await prompts({
+        type: 'toggle',
+        name: 'value',
+        message: 'Save changes?',
+        initial: true,
+        active: 'yes',
+        inactive: 'no',
+      })
+
+      if (value) {
+        logger.info('saving changes...')
+        const encrypted = encrypt(edited, pwd)
+        fs.writeFileSync(argv.fileName, encrypted)
+      } else {
+        logger.info('changes not saved...')
+      }
+
+      process.exit() // stdin is not closed by prompts
     },
   )
   .help().argv
