@@ -5,6 +5,7 @@ import yargs from '@bpinternal/yargs-extra'
 import { editor, LOREM_IPSUM } from './editor'
 import { Logger } from './logger'
 import { EFSError } from './errors'
+import { Termit } from './termit'
 
 const PWD_CHAR = '*'
 const ALGORITHM = 'aes-192-cbc'
@@ -107,8 +108,8 @@ void yargs
     'Edit file',
     (yargs) => yargs.positional('fileName', { type: 'string', demandOption: true }),
     async (argv) => {
-      const updated = await editor(LOREM_IPSUM)
-      logger.info('content: \n' + updated)
+      const edited = await Termit.edit({ content: LOREM_IPSUM })
+      logger.info(edited)
     },
   )
   .help().argv

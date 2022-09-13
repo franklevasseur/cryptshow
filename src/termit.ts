@@ -1,9 +1,9 @@
 // forked from https://github.com/hakash/termit
-
 import terminalKit from 'terminal-kit'
 
 type TermitProps = {
   title: string
+  content: string
 }
 
 type NextCb = (err?: Error) => void
@@ -12,13 +12,9 @@ type BufferElement = {
   char: string
 }
 
-let defaults = {
-  statusBar: {
-    message: 'Ctrl+C:exit',
-  },
-  titleBar: {
-    title: 'Welcome to Termit - The TERMinal edITor!',
-  },
+type KeyData = {
+  isCharacter: boolean
+  code: Buffer
 }
 
 type TextBuffer = terminalKit.TextBuffer & {
@@ -30,69 +26,63 @@ type TextBuffer = terminalKit.TextBuffer & {
   backDelete: (x: number) => void
 }
 
+const DEFAULT_STATUS_BAR_MESSAGE = 'Ctrl+C:exit'
+const DEFAULT_TITLE_BAR_TITLE = 'Welcome to Termit - The TERMinal edITor!'
+
 export class Termit {
-  // ctor
-  private term: terminalKit.Terminal
-  private statusBarTimer: number | NodeJS.Timeout | undefined
-  private resizeTimer: number | NodeJS.Timeout | undefined
-  private screenBuffer: terminalKit.ScreenBuffer
-  private textBuffer: TextBuffer
-  private hookChain: (next: NextCb) => void
+  private constructor(
+    private title: string,
+    private term: terminalKit.Terminal,
+    private statusBarTimer: number | NodeJS.Timeout | undefined,
+    private resizeTimer: number | NodeJS.Timeout | undefined,
+    private screenBuffer: terminalKit.ScreenBuffer,
+    private textBuffer: TextBuffer,
+    private disableUserInteraction: boolean,
+    private exitObserver: NextCb | undefined,
+  ) {}
 
-  // lifecycle
-  private disableUserInteraction = false
-
-  constructor(options: Partial<TermitProps> = {}) {
-    defaults.titleBar.title = options.title || defaults.titleBar.title
-
-    this.term = terminalKit.terminal
-    this.statusBarTimer = undefined
-
-    this.screenBuffer = new terminalKit.ScreenBuffer({
-      dst: this.term,
-      height: this.term.height - 2,
+  public static async edit(props: Partial<TermitProps> = {}): Promise<string> {
+    const title = props.title ?? DEFAULT_TITLE_BAR_TITLE
+    const term = terminalKit.terminal
+    const statusBarTimer = undefined
+    const screenBuffer = new terminalKit.ScreenBuffer({
+      dst: term,
+      height: term.height - 2,
       y: 2,
     })
 
-    this.textBuffer = new terminalKit.TextBuffer({
-      dst: this.screenBuffer,
+    const textBuffer = new terminalKit.TextBuffer({
+      dst: screenBuffer,
     }) as TextBuffer
-    this.textBuffer.setText('')
+    textBuffer.setText('')
 
-    this.hookChain = (next) => {
-      next()
-    }
+    return new Promise((resolve, reject) => {
+      const inst = new Termit(title, term, statusBarTimer, undefined, screenBuffer, textBuffer, false, (err?: Error) => {
+        if (err) {
+          reject(err)
+        } else {
+          resolve(inst.textBuffer.getText())
+        }
+      })
+
+      inst.term.on('resize', inst.onResize.bind(inst))
+      inst.term.on('key', inst.onKey.bind(inst))
+      inst.term.fullscreen(true)
+      inst.textBuffer.moveTo(0, 0)
+      inst.screenBuffer.moveTo(0, 0)
+      inst.term.grabInput({ mouse: undefined })
+      inst.drawStatusBar()
+      inst.drawTitleBar()
+      inst.draw()
+      if (props.content) {
+        inst.load(props.content)
+      }
+    })
   }
 
-  public addPreSaveHook(hook: NextCb) {
-    let self = this
-    this.hookChain = (function (chain) {
-      return function (next: NextCb) {
-        chain.call(self, function () {
-          hook.call(self, next.bind(self))
-        })
-      }.bind(this)
-    })(this.hookChain)
-  }
-
-  public init(content: string) {
-    this.term.on('resize', this.onResize.bind(this))
-    this.term.on('key', this.onKey.bind(this))
-
-    this.term.fullscreen(true)
-
-    this.textBuffer.moveTo(0, 0)
-    this.screenBuffer.moveTo(0, 0)
-
-    this.term.grabInput({ mouse: undefined })
-    this.drawStatusBar()
-    this.drawTitleBar()
-
-    this.draw()
-
-    if (content) {
-      this.load(content)
-    }
+  private clean() {
+    this.term.grabInput(false)
+    this.term.fullscreen(false)
   }
 
   private drawBar(pos: Position, message: string, invert: boolean = false) {
@@ -103,7 +93,7 @@ export class Termit {
     }
   }
 
-  private drawStatusBar(message: string = defaults.statusBar.message, timeout: number = -1) {
+  private drawStatusBar(message: string = DEFAULT_STATUS_BAR_MESSAGE, timeout: number = -1) {
     this.drawBar(
       {
         x: 0,
@@ -131,13 +121,7 @@ export class Termit {
   }
 
   private drawTitleBar() {
-    this.drawBar(
-      {
-        x: 1,
-        y: 1,
-      },
-      defaults.titleBar.title,
-    )
+    this.drawBar({ x: 1, y: 1 }, this.title)
   }
 
   private load(content: string) {
@@ -152,10 +136,11 @@ export class Termit {
 
   private exit() {
     setTimeout(() => {
-      this.term.grabInput(false)
-      this.term.fullscreen(false)
-      setTimeout(() => process.exit(0), 100)
-    }, 100)
+      this.clean()
+      if (this.exitObserver) {
+        this.exitObserver()
+      }
+    })
   }
 
   private onResize(width: number, height: number) {
@@ -175,7 +160,7 @@ export class Termit {
     }, 150)
   }
 
-  private onKey(key: string, matches, data) {
+  private onKey(key: string, matches: string[], data: KeyData) {
     if (this.disableUserInteraction && key !== 'CTRL_C') {
       return
     }
