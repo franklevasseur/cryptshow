@@ -243,14 +243,19 @@ export class Termit {
           break
         default:
           if (data.isCharacter) {
-            this.textBuffer.insert(key)
-            this.draw()
+            this.write(key)
           }
       }
     } catch (thrown) {
       const err = thrown instanceof Error ? thrown : new Error(`${thrown}`)
       this.drawStatusBar(`Error: "${err.message}"`, 4000)
     }
+  }
+
+  private write(text: string) {
+    this.deleteSelection()
+    this.textBuffer.insert(text)
+    this.draw()
   }
 
   private draw(delta: boolean = true) {
@@ -381,31 +386,28 @@ export class Termit {
   }
 
   private delete() {
-    if (this.textBuffer.selectionRegion) {
-      const { tail } = this._toPosition(this.textBuffer.selectionRegion)
-
-      this.textBuffer.deleteSelection()
-      this.textBuffer.moveTo(tail.x, tail.y)
-
-      this.draw()
-      return
-    }
+    this.deleteSelection()
     this.textBuffer.delete(1)
     this.draw()
   }
 
   private backspace() {
-    if (this.textBuffer.selectionRegion) {
-      const { tail } = this._toPosition(this.textBuffer.selectionRegion)
-
-      this.textBuffer.deleteSelection()
-      this.textBuffer.moveTo(tail.x, tail.y)
-
-      this.draw()
-      return
-    }
+    this.deleteSelection()
     this.textBuffer.backDelete(1)
     this.draw()
+  }
+
+  private deleteSelection() {
+    if (!this.textBuffer.selectionRegion) {
+      return
+    }
+    const { tail } = this._toPosition(this.textBuffer.selectionRegion)
+
+    this.textBuffer.deleteSelection()
+    this.textBuffer.moveTo(tail.x, tail.y)
+
+    this.draw()
+    return
   }
 
   private newLine() {
