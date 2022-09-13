@@ -1,9 +1,9 @@
 {
-  "name": "efs",
+  "name": "cryptshow",
   "version": "1.0.0",
   "description": "Small CLI tool to encrypt files",
   "main": "./dist/index.js",
-  "repository": "git@github.com:franklevasseur/efs.git",
+  "repository": "git@github.com:franklevasseur/cryptshow.git",
   "author": "<francois_levasseur@hotmail.com>",
   "license": "MIT",
   "dependencies": {

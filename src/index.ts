@@ -3,7 +3,7 @@ import crypto from 'crypto'
 import fs from 'fs'
 import yargs from '@bpinternal/yargs-extra'
 import { Logger } from './logger'
-import { EFSError } from './errors'
+import { CryptShowError } from './errors'
 import { Termit } from './termit'
 import wtfnode from 'wtfnode'
 
@@ -42,7 +42,7 @@ const decrypt = (str: string, pwd: string) => {
 const logger = new Logger()
 
 const handleErr = (thrown: any) => {
-  if (thrown instanceof EFSError) {
+  if (thrown instanceof CryptShowError) {
     for (const m of thrown.messages) {
       logger.error(m)
     }
@@ -59,7 +59,7 @@ process.on('uncaughtException', (thrown: any) => handleErr(thrown))
 process.on('unhandledRejection', (thrown: any) => handleErr(thrown))
 
 void yargs
-  .fail((msg: string) => handleErr(new EFSError(msg)))
+  .fail((msg: string) => handleErr(new CryptShowError(msg)))
   .strict()
   .command(
     '$0',
