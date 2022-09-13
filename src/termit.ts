@@ -1,5 +1,6 @@
 // forked from https://github.com/hakash/termit
 import terminalKit from 'terminal-kit'
+import clipboardy from 'clipboardy'
 
 type TermitProps = {
   title: string
@@ -37,7 +38,7 @@ type TextBuffer = terminalKit.TextBuffer & {
   resetSelectionRegion: () => void
 }
 
-const DEFAULT_STATUS_BAR_MESSAGE = 'Ctrl+C:exit'
+const DEFAULT_STATUS_BAR_MESSAGE = 'Esc:exit    Ctrl+C:copy    Ctrl+V:paste'
 const DEFAULT_TITLE_BAR_TITLE = 'Welcome to Termit - The TERMinal edITor!'
 
 export class Termit {
@@ -48,7 +49,6 @@ export class Termit {
     private resizeTimer: number | NodeJS.Timeout | undefined,
     private screenBuffer: terminalKit.ScreenBuffer,
     private textBuffer: TextBuffer,
-    private disableUserInteraction: boolean,
     private exitObserver: NextCb | undefined,
   ) {}
 
@@ -68,7 +68,7 @@ export class Termit {
     textBuffer.setText('')
 
     return new Promise((resolve, reject) => {
-      const inst = new Termit(title, term, statusBarTimer, undefined, screenBuffer, textBuffer, false, (err?: Error) => {
+      const inst = new Termit(title, term, statusBarTimer, undefined, screenBuffer, textBuffer, (err?: Error) => {
         if (err) {
           reject(err)
         } else {
@@ -136,12 +136,10 @@ export class Termit {
   }
 
   private load(content: string) {
-    this.disableUserInteraction = true
     this.textBuffer.moveTo(0, 0)
     this.textBuffer.setText('')
     this.textBuffer.insert(content)
     this.textBuffer.moveTo(0, 0)
-    this.disableUserInteraction = false
     this.draw()
   }
 
@@ -172,13 +170,9 @@ export class Termit {
   }
 
   private onKey(key: string, matches: string[], data: KeyData) {
-    if (this.disableUserInteraction && key !== 'CTRL_C') {
-      return
-    }
-
     try {
       switch (key) {
-        case 'CTRL_C':
+        case 'ESCAPE':
           this.exit()
           break
         case 'PAGE_UP':
@@ -241,6 +235,12 @@ export class Termit {
         case 'ENTER':
           this.newLine()
           break
+        case 'CTRL_C':
+          this.copy()
+          break
+        case 'CTRL_V':
+          this.paste()
+          break
         default:
           if (data.isCharacter) {
             this.textBuffer.insert(key)
@@ -290,7 +290,7 @@ export class Termit {
 
   private left() {
     if (this.textBuffer.selectionRegion) {
-      const { tail } = this.toPosition(this.textBuffer.selectionRegion)
+      const { tail } = this._toPosition(this.textBuffer.selectionRegion)
       this.textBuffer.moveTo(tail.x, tail.y)
     }
     this.textBuffer.moveBackward(false)
@@ -300,7 +300,7 @@ export class Termit {
 
   private right() {
     if (this.textBuffer.selectionRegion) {
-      const { head } = this.toPosition(this.textBuffer.selectionRegion)
+      const { head } = this._toPosition(this.textBuffer.selectionRegion)
       this.textBuffer.moveTo(head.x, head.y)
     }
 
@@ -317,7 +317,7 @@ export class Termit {
 
   private up() {
     if (this.textBuffer.selectionRegion) {
-      const { tail } = this.toPosition(this.textBuffer.selectionRegion)
+      const { tail } = this._toPosition(this.textBuffer.selectionRegion)
       this.textBuffer.moveTo(tail.x, tail.y)
     }
     this.textBuffer.moveUp()
@@ -330,7 +330,7 @@ export class Termit {
 
   private down() {
     if (this.textBuffer.selectionRegion) {
-      const { head } = this.toPosition(this.textBuffer.selectionRegion)
+      const { head } = this._toPosition(this.textBuffer.selectionRegion)
       this.textBuffer.moveTo(head.x, head.y)
     }
 
@@ -382,7 +382,7 @@ export class Termit {
 
   private delete() {
     if (this.textBuffer.selectionRegion) {
-      const { tail } = this.toPosition(this.textBuffer.selectionRegion)
+      const { tail } = this._toPosition(this.textBuffer.selectionRegion)
 
       this.textBuffer.deleteSelection()
       this.textBuffer.moveTo(tail.x, tail.y)
@@ -396,7 +396,7 @@ export class Termit {
 
   private backspace() {
     if (this.textBuffer.selectionRegion) {
-      const { tail } = this.toPosition(this.textBuffer.selectionRegion)
+      const { tail } = this._toPosition(this.textBuffer.selectionRegion)
 
       this.textBuffer.deleteSelection()
       this.textBuffer.moveTo(tail.x, tail.y)
@@ -419,17 +419,17 @@ export class Termit {
   }
 
   private shiftRight() {
-    const currentSelection: SelectionRegion = this.textBuffer.selectionRegion ?? this.emptySelection()
-    const { tail, head } = this.toPosition(currentSelection)
+    const currentSelection: SelectionRegion = this.textBuffer.selectionRegion ?? this._emptySelection()
+    const { tail, head } = this._toPosition(currentSelection)
     const cur: Position = { x: this.textBuffer.cx, y: this.textBuffer.cy }
 
     let newSelection: SelectionRegion
-    if (this.getIdx(tail) >= this.getIdx(cur)) {
-      const newHead = this.getPos(this.getIdx(head) + 1)
-      newSelection = this.fromPosition({ tail, head: newHead })
+    if (this._getIdx(tail) >= this._getIdx(cur)) {
+      const newHead = this._getPos(this._getIdx(head) + 1)
+      newSelection = this._fromPosition({ tail, head: newHead })
     } else {
-      const newTail = this.getPos(this.getIdx(tail) + 1)
-      newSelection = this.fromPosition({ tail: newTail, head })
+      const newTail = this._getPos(this._getIdx(tail) + 1)
+      newSelection = this._fromPosition({ tail: newTail, head })
     }
 
     this.textBuffer.setSelectionRegion(newSelection)
@@ -437,17 +437,17 @@ export class Termit {
   }
 
   private shiftLeft() {
-    const currentSelection: SelectionRegion = this.textBuffer.selectionRegion ?? this.emptySelection()
-    const { tail, head } = this.toPosition(currentSelection)
+    const currentSelection: SelectionRegion = this.textBuffer.selectionRegion ?? this._emptySelection()
+    const { tail, head } = this._toPosition(currentSelection)
     const cur: Position = { x: this.textBuffer.cx, y: this.textBuffer.cy }
 
     let newSelection: SelectionRegion
-    if (this.getIdx(head) <= this.getIdx(cur)) {
-      const newTail = this.getPos(this.getIdx(tail) - 1)
-      newSelection = this.fromPosition({ tail: newTail, head })
+    if (this._getIdx(head) <= this._getIdx(cur)) {
+      const newTail = this._getPos(this._getIdx(tail) - 1)
+      newSelection = this._fromPosition({ tail: newTail, head })
     } else {
-      const newHead = this.getPos(this.getIdx(head) - 1)
-      newSelection = this.fromPosition({ tail, head: newHead })
+      const newHead = this._getPos(this._getIdx(head) - 1)
+      newSelection = this._fromPosition({ tail, head: newHead })
     }
 
     this.textBuffer.setSelectionRegion(newSelection)
@@ -455,17 +455,17 @@ export class Termit {
   }
 
   private shiftDown() {
-    const currentSelection: SelectionRegion = this.textBuffer.selectionRegion ?? this.emptySelection()
-    const { tail, head } = this.toPosition(currentSelection)
+    const currentSelection: SelectionRegion = this.textBuffer.selectionRegion ?? this._emptySelection()
+    const { tail, head } = this._toPosition(currentSelection)
     const cur: Position = { x: this.textBuffer.cx, y: this.textBuffer.cy }
 
     let newSelection: SelectionRegion
-    if (this.getIdx(tail) >= this.getIdx(cur)) {
+    if (this._getIdx(tail) >= this._getIdx(cur)) {
       const newHead = { ...head, y: Math.min(this.textBuffer.getContentSize().height - 1, head.y + 1) }
-      newSelection = this.fromPosition({ tail, head: newHead })
+      newSelection = this._fromPosition({ tail, head: newHead })
     } else {
       const newTail = { ...tail, y: tail.y + 1 }
-      newSelection = this.fromPosition({ tail: newTail, head })
+      newSelection = this._fromPosition({ tail: newTail, head })
     }
 
     this.textBuffer.setSelectionRegion(newSelection)
@@ -473,17 +473,17 @@ export class Termit {
   }
 
   private shiftUp() {
-    const currentSelection: SelectionRegion = this.textBuffer.selectionRegion ?? this.emptySelection()
-    const { tail, head } = this.toPosition(currentSelection)
+    const currentSelection: SelectionRegion = this.textBuffer.selectionRegion ?? this._emptySelection()
+    const { tail, head } = this._toPosition(currentSelection)
     const cur: Position = { x: this.textBuffer.cx, y: this.textBuffer.cy }
 
     let newSelection: SelectionRegion
-    if (this.getIdx(head) <= this.getIdx(cur)) {
+    if (this._getIdx(head) <= this._getIdx(cur)) {
       const newTail = { ...tail, y: Math.max(0, tail.y - 1) }
-      newSelection = this.fromPosition({ tail: newTail, head })
+      newSelection = this._fromPosition({ tail: newTail, head })
     } else {
       const newHead = { ...head, y: head.y - 1 }
-      newSelection = this.fromPosition({ tail, head: newHead })
+      newSelection = this._fromPosition({ tail, head: newHead })
     }
 
     this.textBuffer.setSelectionRegion(newSelection)
@@ -491,17 +491,17 @@ export class Termit {
   }
 
   private shiftEnd() {
-    const currentSelection: SelectionRegion = this.textBuffer.selectionRegion ?? this.emptySelection()
-    const { tail, head } = this.toPosition(currentSelection)
+    const currentSelection: SelectionRegion = this.textBuffer.selectionRegion ?? this._emptySelection()
+    const { tail, head } = this._toPosition(currentSelection)
     const cur: Position = { x: this.textBuffer.cx, y: this.textBuffer.cy }
 
     let newSelection: SelectionRegion
-    if (this.getIdx(tail) >= this.getIdx(cur)) {
+    if (this._getIdx(tail) >= this._getIdx(cur)) {
       const newHead = { ...head, x: this.textBuffer.buffer[head.y].length }
-      newSelection = this.fromPosition({ tail, head: newHead })
+      newSelection = this._fromPosition({ tail, head: newHead })
     } else {
       const newTail = { ...tail, x: this.textBuffer.buffer[tail.y].length }
-      newSelection = this.fromPosition({ tail: newTail, head })
+      newSelection = this._fromPosition({ tail: newTail, head })
     }
 
     this.textBuffer.setSelectionRegion(newSelection)
@@ -509,24 +509,40 @@ export class Termit {
   }
 
   private shiftHome() {
-    const currentSelection: SelectionRegion = this.textBuffer.selectionRegion ?? this.emptySelection()
-    const { tail, head } = this.toPosition(currentSelection)
+    const currentSelection: SelectionRegion = this.textBuffer.selectionRegion ?? this._emptySelection()
+    const { tail, head } = this._toPosition(currentSelection)
     const cur: Position = { x: this.textBuffer.cx, y: this.textBuffer.cy }
 
     let newSelection: SelectionRegion
-    if (this.getIdx(head) <= this.getIdx(cur)) {
+    if (this._getIdx(head) <= this._getIdx(cur)) {
       const newTail = { ...tail, x: 0 }
-      newSelection = this.fromPosition({ tail: newTail, head })
+      newSelection = this._fromPosition({ tail: newTail, head })
     } else {
       const newHead = { ...head, x: 0 }
-      newSelection = this.fromPosition({ tail, head: newHead })
+      newSelection = this._fromPosition({ tail, head: newHead })
     }
 
     this.textBuffer.setSelectionRegion(newSelection)
     this.draw()
   }
 
-  private emptySelection(): SelectionRegion {
+  private copy() {
+    if (this.textBuffer.selectionRegion) {
+      const { tail, head } = this._toPosition(this.textBuffer.selectionRegion)
+      const tailIdx = this._getIdx(tail)
+      const headIdx = this._getIdx(head)
+      const text = this.textBuffer.getText().slice(tailIdx, headIdx)
+      clipboardy.writeSync(text)
+    }
+  }
+
+  private paste() {
+    const text = clipboardy.readSync()
+    this.textBuffer.insert(text)
+    this.draw()
+  }
+
+  private _emptySelection(): SelectionRegion {
     return {
       xmin: this.textBuffer.cx,
       xmax: this.textBuffer.cx,
@@ -535,17 +551,17 @@ export class Termit {
     }
   }
 
-  private toPosition(sel: SelectionRegion): { tail: Position; head: Position } {
+  private _toPosition(sel: SelectionRegion): { tail: Position; head: Position } {
     let tail = { x: sel.xmin, y: sel.ymin }
     let head = { x: sel.xmax, y: sel.ymax }
-    if (this.getIdx(tail) > this.getIdx(head)) {
+    if (this._getIdx(tail) > this._getIdx(head)) {
       ;[tail, head] = [head, tail]
     }
     return { tail, head }
   }
 
-  private fromPosition({ tail, head }: { tail: Position; head: Position }): SelectionRegion {
-    if (this.getIdx(tail) > this.getIdx(head)) {
+  private _fromPosition({ tail, head }: { tail: Position; head: Position }): SelectionRegion {
+    if (this._getIdx(tail) > this._getIdx(head)) {
       ;[tail, head] = [head, tail]
     }
     return {
@@ -556,12 +572,12 @@ export class Termit {
     }
   }
 
-  private getIdx(pos: Position): number {
+  private _getIdx(pos: Position): number {
     const n = this.textBuffer.buffer.slice(undefined, pos.y).reduce((acc, cur) => acc + cur.length, 0)
     return n + pos.x
   }
 
-  private getPos(idx: number): Position {
+  private _getPos(idx: number): Position {
     let x = 0
     let y = 0
     let n = 0

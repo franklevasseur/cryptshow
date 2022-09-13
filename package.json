@@ -11,7 +11,8 @@
     "chalk": "^4.1.2",
     "prompt-password": "^1.2.0",
     "prompt-skeleton": "^0.4.0",
-    "terminal-kit": "^2.11.4"
+    "terminal-kit": "^2.11.4",
+    "clipboardy": "^2.3.0"
   },
   "devDependencies": {
     "@types/node": "^16.11.56",
