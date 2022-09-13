@@ -174,75 +174,80 @@ export class Termit {
       return
     }
 
-    switch (key) {
-      case 'CTRL_C':
-        this.exit()
-        break
-      case 'PAGE_UP':
-        this.pgUp()
-        break
-      case 'PAGE_DOWN':
-        this.pgDown()
-        break
-      case 'UP':
-        this.up()
-        break
-      case 'DOWN':
-        this.down()
-        break
-      case 'LEFT':
-        this.left()
-        break
-      case 'RIGHT':
-        this.right()
-        break
-      case 'SHIFT_RIGHT':
-        this.shiftRight()
-        break
-      case 'SHIFT_LEFT':
-        this.shiftLeft()
-        break
-      case 'SHIFT_UP':
-        this.shiftUp()
-        break
-      case 'SHIFT_DOWN':
-        this.shiftDown()
-        break
-      case 'SHIFT_END':
-        this.shiftEnd()
-        break
-      case 'SHIFT_HOME':
-        this.shiftHome()
-        break
-      case 'HOME':
-        this.startOfLine()
-        break
-      case 'END':
-        this.endOfLine()
-        break
-      case 'TAB':
-        this.tab()
-        break
-      case 'CTRL_HOME':
-        this.startOfText()
-        break
-      case 'CTRL_END':
-        this.endOfText()
-        break
-      case 'DELETE':
-        this.delete()
-        break
-      case 'BACKSPACE':
-        this.backspace()
-        break
-      case 'ENTER':
-        this.newLine()
-        break
-      default:
-        if (data.isCharacter) {
-          this.textBuffer.insert(key)
-          this.draw()
-        }
+    try {
+      switch (key) {
+        case 'CTRL_C':
+          this.exit()
+          break
+        case 'PAGE_UP':
+          this.pgUp()
+          break
+        case 'PAGE_DOWN':
+          this.pgDown()
+          break
+        case 'UP':
+          this.up()
+          break
+        case 'DOWN':
+          this.down()
+          break
+        case 'LEFT':
+          this.left()
+          break
+        case 'RIGHT':
+          this.right()
+          break
+        case 'SHIFT_RIGHT':
+          this.shiftRight()
+          break
+        case 'SHIFT_LEFT':
+          this.shiftLeft()
+          break
+        case 'SHIFT_UP':
+          this.shiftUp()
+          break
+        case 'SHIFT_DOWN':
+          this.shiftDown()
+          break
+        case 'SHIFT_END':
+          this.shiftEnd()
+          break
+        case 'SHIFT_HOME':
+          this.shiftHome()
+          break
+        case 'HOME':
+          this.startOfLine()
+          break
+        case 'END':
+          this.endOfLine()
+          break
+        case 'TAB':
+          this.tab()
+          break
+        case 'CTRL_HOME':
+          this.startOfText()
+          break
+        case 'CTRL_END':
+          this.endOfText()
+          break
+        case 'DELETE':
+          this.delete()
+          break
+        case 'BACKSPACE':
+          this.backspace()
+          break
+        case 'ENTER':
+          this.newLine()
+          break
+        default:
+          if (data.isCharacter) {
+            this.textBuffer.insert(key)
+            this.draw()
+          }
+      }
+    } catch (thrown) {
+      const err = thrown instanceof Error ? thrown : new Error(`${thrown}`)
+      this.drawStatusBar(`Error: "${err.message}"`, 4000)
     }
   }
 
@@ -281,7 +286,38 @@ export class Termit {
     this.screenBuffer.drawCursor()
   }
 
+  private left() {
+    if (this.textBuffer.selectionRegion) {
+      const { tail } = this.toPosition(this.textBuffer.selectionRegion)
+      this.textBuffer.moveTo(tail.x, tail.y)
+    }
+    this.textBuffer.moveBackward(false)
+    this.textBuffer.selectionRegion = null
+    this.draw()
+  }
+
+  private right() {
+    if (this.textBuffer.selectionRegion) {
+      const { head } = this.toPosition(this.textBuffer.selectionRegion)
+      this.textBuffer.moveTo(head.x, head.y)
+    }
+
+    if (this.textBuffer.cy >= this.textBuffer.buffer.length) {
+      this.textBuffer.selectionRegion = null
+      this.draw()
+      return
+    }
+
+    this.textBuffer.moveForward(false)
+    this.textBuffer.selectionRegion = null
+    this.draw()
+  }
+
   private up() {
+    if (this.textBuffer.selectionRegion) {
+      const { tail } = this.toPosition(this.textBuffer.selectionRegion)
+      this.textBuffer.moveTo(tail.x, tail.y)
+    }
     this.textBuffer.moveUp()
     if (this.textBuffer.cx > this.textBuffer.buffer[this.textBuffer.cy].length - 1) {
       this.textBuffer.moveToEndOfLine()
@@ -291,25 +327,21 @@ export class Termit {
   }
 
   private down() {
-    if (this.textBuffer.getContentSize().height - 1 > this.textBuffer.cy) {
-      this.textBuffer.moveDown()
+    if (this.textBuffer.selectionRegion) {
+      const { head } = this.toPosition(this.textBuffer.selectionRegion)
+      this.textBuffer.moveTo(head.x, head.y)
+    }
 
-      if (this.textBuffer.cx > this.textBuffer.buffer[this.textBuffer.cy].length - 1) {
-        this.textBuffer.moveToEndOfLine()
-      }
+    if (this.textBuffer.cy >= this.textBuffer.buffer.length - 1) {
       this.textBuffer.selectionRegion = null
       this.draw()
+      return
     }
-  }
 
-  private left() {
-    this.textBuffer.moveBackward(false)
-    this.textBuffer.selectionRegion = null
-    this.draw()
-  }
-
-  private right() {
-    this.textBuffer.moveForward(false)
+    this.textBuffer.moveDown()
+    if (this.textBuffer.cx > this.textBuffer.buffer[this.textBuffer.cy].length - 1) {
+      this.textBuffer.moveToEndOfLine()
+    }
     this.textBuffer.selectionRegion = null
     this.draw()
   }
