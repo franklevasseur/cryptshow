@@ -1,4 +1,5 @@
 // forked from https://github.com/hakash/termit
+
 import terminalKit from 'terminal-kit'
 
 type TermitProps = {
@@ -22,7 +23,14 @@ let defaults = {
   },
 }
 
-type TextBuffer = terminalKit.TextBuffer & { cx: number; cy: number; buffer: BufferElement[][] }
+type TextBuffer = terminalKit.TextBuffer & {
+  x: number
+  y: number
+  cx: number
+  cy: number
+  buffer: BufferElement[][]
+  backDelete: (x: number) => void
+}
 
 export class Termit {
   // ctor
@@ -90,10 +98,7 @@ export class Termit {
     this.textBuffer.moveTo(0, 0)
     this.screenBuffer.moveTo(0, 0)
 
-    this.term.grabInput({
-      // @ts-ignore
-      mouse: false,
-    })
+    this.term.grabInput({ mouse: undefined })
     this.drawStatusBar()
     this.drawTitleBar()
 
@@ -266,9 +271,7 @@ export class Termit {
     }
 
     if (new_buffer_y != this.textBuffer.y || new_buffer_x != this.textBuffer.x) {
-      // @ts-ignore
       this.textBuffer.x = new_buffer_x
-      // @ts-ignore
       this.textBuffer.y = new_buffer_y
       this.textBuffer.draw()
       this.screenBuffer.draw({
@@ -358,7 +361,6 @@ export class Termit {
   }
 
   private backspace() {
-    // @ts-ignore
     this.textBuffer.backDelete(1)
     this.draw()
   }
