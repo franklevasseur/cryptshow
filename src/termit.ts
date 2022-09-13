@@ -33,6 +33,8 @@ type TextBuffer = terminalKit.TextBuffer & {
   selectionRegion: SelectionRegion | null
   backDelete: (x: number) => void
   setSelectionRegion: (region: SelectionRegion) => void
+  deleteSelection: () => void
+  resetSelectionRegion: () => void
 }
 
 const DEFAULT_STATUS_BAR_MESSAGE = 'Ctrl+C:exit'
@@ -292,7 +294,7 @@ export class Termit {
       this.textBuffer.moveTo(tail.x, tail.y)
     }
     this.textBuffer.moveBackward(false)
-    this.textBuffer.selectionRegion = null
+    this.textBuffer.resetSelectionRegion()
     this.draw()
   }
 
@@ -303,13 +305,13 @@ export class Termit {
     }
 
     if (this.textBuffer.cy >= this.textBuffer.buffer.length) {
-      this.textBuffer.selectionRegion = null
+      this.textBuffer.resetSelectionRegion()
       this.draw()
       return
     }
 
     this.textBuffer.moveForward(false)
-    this.textBuffer.selectionRegion = null
+    this.textBuffer.resetSelectionRegion()
     this.draw()
   }
 
@@ -322,7 +324,7 @@ export class Termit {
     if (this.textBuffer.cx > this.textBuffer.buffer[this.textBuffer.cy].length - 1) {
       this.textBuffer.moveToEndOfLine()
     }
-    this.textBuffer.selectionRegion = null
+    this.textBuffer.resetSelectionRegion()
     this.draw()
   }
 
@@ -333,7 +335,7 @@ export class Termit {
     }
 
     if (this.textBuffer.cy >= this.textBuffer.buffer.length - 1) {
-      this.textBuffer.selectionRegion = null
+      this.textBuffer.resetSelectionRegion()
       this.draw()
       return
     }
@@ -342,7 +344,7 @@ export class Termit {
     if (this.textBuffer.cx > this.textBuffer.buffer[this.textBuffer.cy].length - 1) {
       this.textBuffer.moveToEndOfLine()
     }
-    this.textBuffer.selectionRegion = null
+    this.textBuffer.resetSelectionRegion()
     this.draw()
   }
 
@@ -379,11 +381,29 @@ export class Termit {
   }
 
   private delete() {
+    if (this.textBuffer.selectionRegion) {
+      const { tail } = this.toPosition(this.textBuffer.selectionRegion)
+
+      this.textBuffer.deleteSelection()
+      this.textBuffer.moveTo(tail.x, tail.y)
+
+      this.draw()
+      return
+    }
     this.textBuffer.delete(1)
     this.draw()
   }
 
   private backspace() {
+    if (this.textBuffer.selectionRegion) {
+      const { tail } = this.toPosition(this.textBuffer.selectionRegion)
+
+      this.textBuffer.deleteSelection()
+      this.textBuffer.moveTo(tail.x, tail.y)
+
+      this.draw()
+      return
+    }
     this.textBuffer.backDelete(1)
     this.draw()
   }
