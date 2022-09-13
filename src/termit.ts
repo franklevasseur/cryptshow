@@ -3,8 +3,6 @@
 import terminalKit from 'terminal-kit'
 
 type TermitProps = {
-  disableOpen: boolean
-  disableSaveAs: boolean
   title: string
 }
 
@@ -34,8 +32,6 @@ type TextBuffer = terminalKit.TextBuffer & {
 
 export class Termit {
   // ctor
-  private disableOpen: boolean
-  private disableSaveAs: boolean
   private term: terminalKit.Terminal
   private statusBarTimer: number | NodeJS.Timeout | undefined
   private resizeTimer: number | NodeJS.Timeout | undefined
@@ -47,16 +43,6 @@ export class Termit {
   private disableUserInteraction = false
 
   constructor(options: Partial<TermitProps> = {}) {
-    this.disableOpen = options.disableOpen || false
-    if (this.disableOpen) {
-      defaults.statusBar.message = defaults.statusBar.message.replace('O:Open  ', '')
-    }
-
-    this.disableSaveAs = options.disableSaveAs || false
-    if (this.disableSaveAs) {
-      defaults.statusBar.message = defaults.statusBar.message.replace('A:save As  ', '')
-    }
-
     defaults.titleBar.title = options.title || defaults.titleBar.title
 
     this.term = terminalKit.terminal
