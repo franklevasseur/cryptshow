@@ -1,0 +1,61 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "debug cat",
+      "type": "node",
+      "request": "launch",
+      "skipFiles": ["<node_internals>/**"],
+      "program": "${workspaceFolder}/dist/index.js",
+      "console": "integratedTerminal",
+      "sourceMaps": true,
+      "autoAttachChildProcesses": true,
+      "args": ["cat", "${input:file2edit}"],
+      "outFiles": ["${workspaceRoot}/dist/**/*.js", "${workspaceRoot}/node_modules/**/*.js"]
+    },
+    {
+      "name": "debug encrypt",
+      "type": "node",
+      "request": "launch",
+      "skipFiles": ["<node_internals>/**"],
+      "program": "${workspaceFolder}/dist/index.js",
+      "console": "integratedTerminal",
+      "sourceMaps": true,
+      "autoAttachChildProcesses": true,
+      "args": ["encrypt", "${input:file2edit}"],
+      "outFiles": ["${workspaceRoot}/dist/**/*.js", "${workspaceRoot}/node_modules/**/*.js"]
+    },
+    {
+      "name": "debug decrypt",
+      "type": "node",
+      "request": "launch",
+      "skipFiles": ["<node_internals>/**"],
+      "program": "${workspaceFolder}/dist/index.js",
+      "console": "integratedTerminal",
+      "sourceMaps": true,
+      "autoAttachChildProcesses": true,
+      "args": ["decrypt", "${input:file2edit}"],
+      "outFiles": ["${workspaceRoot}/dist/**/*.js", "${workspaceRoot}/node_modules/**/*.js"]
+    },
+    {
+      "name": "debug edit",
+      "type": "node",
+      "request": "launch",
+      "skipFiles": ["<node_internals>/**"],
+      "program": "${workspaceFolder}/dist/index.js",
+      "console": "integratedTerminal",
+      "sourceMaps": true,
+      "autoAttachChildProcesses": true,
+      "args": ["edit", "${input:file2edit}"],
+      "outFiles": ["${workspaceRoot}/dist/**/*.js", "${workspaceRoot}/node_modules/**/*.js"]
+    }
+  ],
+  "inputs": [
+    {
+      "id": "file2edit",
+      "type": "promptString",
+      "description": "Select a file",
+      "default": "/path/to/your/file"
+    }
+  ]
+}
