@@ -208,6 +208,12 @@ export class Termit {
       case 'SHIFT_DOWN':
         this.shiftDown()
         break
+      case 'SHIFT_END':
+        this.shiftEnd()
+        break
+      case 'SHIFT_HOME':
+        this.shiftHome()
+        break
       case 'HOME':
         this.startOfLine()
         break
@@ -306,10 +312,6 @@ export class Termit {
     this.textBuffer.moveForward(false)
     this.textBuffer.selectionRegion = null
     this.draw()
-  }
-
-  private getLine() {
-    return this.textBuffer.buffer[this.textBuffer.cy].map((x) => x.char).join('')
   }
 
   private startOfLine() {
@@ -429,6 +431,42 @@ export class Termit {
       newSelection = this.fromPosition({ tail: newTail, head })
     } else {
       const newHead = { ...head, y: head.y - 1 }
+      newSelection = this.fromPosition({ tail, head: newHead })
+    }
+
+    this.textBuffer.setSelectionRegion(newSelection)
+    this.draw()
+  }
+
+  private shiftEnd() {
+    const currentSelection: SelectionRegion = this.textBuffer.selectionRegion ?? this.emptySelection()
+    const { tail, head } = this.toPosition(currentSelection)
+    const cur: Position = { x: this.textBuffer.cx, y: this.textBuffer.cy }
+
+    let newSelection: SelectionRegion
+    if (this.getIdx(tail) >= this.getIdx(cur)) {
+      const newHead = { ...head, x: this.textBuffer.buffer[head.y].length }
+      newSelection = this.fromPosition({ tail, head: newHead })
+    } else {
+      const newTail = { ...tail, x: this.textBuffer.buffer[tail.y].length }
+      newSelection = this.fromPosition({ tail: newTail, head })
+    }
+
+    this.textBuffer.setSelectionRegion(newSelection)
+    this.draw()
+  }
+
+  private shiftHome() {
+    const currentSelection: SelectionRegion = this.textBuffer.selectionRegion ?? this.emptySelection()
+    const { tail, head } = this.toPosition(currentSelection)
+    const cur: Position = { x: this.textBuffer.cx, y: this.textBuffer.cy }
+
+    let newSelection: SelectionRegion
+    if (this.getIdx(head) <= this.getIdx(cur)) {
+      const newTail = { ...tail, x: 0 }
+      newSelection = this.fromPosition({ tail: newTail, head })
+    } else {
+      const newHead = { ...head, x: 0 }
       newSelection = this.fromPosition({ tail, head: newHead })
     }
 
