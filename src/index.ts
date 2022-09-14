@@ -5,7 +5,7 @@ import yargs from '@bpinternal/yargs-extra'
 import { Logger } from './logger'
 import { CryptShowError } from './errors'
 import { Termit } from './termit'
-import wtfnode from 'wtfnode'
+// import wtfnode from 'wtfnode'
 
 const PWD_CHAR = '*'
 const ALGORITHM = 'aes-192-cbc'
