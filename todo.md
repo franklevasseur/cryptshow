@@ -9,3 +9,4 @@
 - [ ] Ctrl+Shift+left/right should select by a word
 - [ ] Ctrl+A should select all
 - [ ] Cursor should have zero width when not selecting
+- [ ] Home/End keys should clear selection
