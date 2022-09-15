@@ -405,21 +405,20 @@ export class Termit {
     if (!this.textBuffer.selectionRegion) {
       return
     }
-    const { tail } = this._toPosition(this.textBuffer.selectionRegion)
 
+    const { tail } = this._toPosition(this.textBuffer.selectionRegion)
     this.textBuffer.deleteSelection()
     this.textBuffer.moveTo(tail.x, tail.y)
-
-    this.draw()
-    return
   }
 
   private newLine() {
+    this.deleteSelection()
     this.textBuffer.newLine()
     this.draw()
   }
 
   private tab() {
+    this.deleteSelection()
     this.textBuffer.insert('\t')
     this.draw()
   }
@@ -543,6 +542,7 @@ export class Termit {
   }
 
   private paste() {
+    this.deleteSelection()
     const text = clipboardy.readSync()
     this.textBuffer.insert(text)
     this.draw()
