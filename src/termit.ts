@@ -38,7 +38,7 @@ type TextBuffer = terminalKit.TextBuffer & {
   resetSelectionRegion: () => void
 }
 
-const DEFAULT_STATUS_BAR_MESSAGE = 'Esc:exit    Ctrl+C:copy    Ctrl+V:paste'
+const DEFAULT_STATUS_BAR_MESSAGE = 'Esc:exit    Ctrl+C:copy    Ctrl+X:cut    Ctrl+V:paste'
 const DEFAULT_TITLE_BAR_TITLE = 'Welcome to Termit - The TERMinal edITor!'
 
 export class Termit {
@@ -237,6 +237,9 @@ export class Termit {
           break
         case 'CTRL_C':
           this.copy()
+          break
+        case 'CTRL_X':
+          this.cut()
           break
         case 'CTRL_V':
           this.paste()
@@ -538,6 +541,13 @@ export class Termit {
       const headIdx = this._getIdx(head)
       const text = this.textBuffer.getText().slice(tailIdx, headIdx)
       clipboardy.writeSync(text)
+    }
+  }
+
+  private cut() {
+    if (this.textBuffer.selectionRegion) {
+      this.copy()
+      this.delete()
     }
   }
 
