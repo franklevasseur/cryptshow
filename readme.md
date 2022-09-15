@@ -18,6 +18,13 @@ Commands:
   crypt edit <fileName>     Edit file
 ```
 
+## From Sources
+
+```sh
+> yarn && yarn build
+> yarn start cat ./cryptshow # type password "cryptshow"
+```
+
 ## License
 
 MIT

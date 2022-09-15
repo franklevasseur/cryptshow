@@ -241,6 +241,8 @@ export class Termit {
         case 'CTRL_V':
           this.paste()
           break
+        case 'CTRL_A':
+          this.selectAll()
         default:
           if (data.isCharacter) {
             this.write(key)
@@ -543,6 +545,18 @@ export class Termit {
   private paste() {
     const text = clipboardy.readSync()
     this.textBuffer.insert(text)
+    this.draw()
+  }
+
+  private selectAll() {
+    const contentSize = this.textBuffer.getContentSize()
+    const selection: SelectionRegion = {
+      xmin: 0,
+      xmax: contentSize.width,
+      ymin: 0,
+      ymax: contentSize.height - 1,
+    }
+    this.textBuffer.setSelectionRegion(selection)
     this.draw()
   }
 

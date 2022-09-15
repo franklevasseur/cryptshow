@@ -79,7 +79,7 @@ void yargs
       const pwd = await getPwd()
       const fileContent = fs.readFileSync(argv.fileName, 'utf8')
       const decrypted = decrypt(fileContent, pwd)
-      logger.info(decrypted)
+      logger.info('\n' + decrypted)
     },
   )
   .command(

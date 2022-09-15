@@ -3,7 +3,8 @@
 ## Termit
 
 - [x] Home/End keys should clear selection
-- [ ] Ctrl+A should select all
+- [x] Ctrl+A should select all
+- [ ] Pasting should clear selection
 - [ ] Selecting while going up/down should move the window view
 - [ ] Escape key should display an exit menu
 - [ ] Ctrl+X should cut the selected text
