@@ -1,6 +1,6 @@
 {
   "name": "cryptshow",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Small CLI tool to encrypt files",
   "main": "./dist/index.js",
   "repository": "git@github.com:franklevasseur/cryptshow.git",
