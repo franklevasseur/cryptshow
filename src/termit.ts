@@ -354,13 +354,15 @@ export class Termit {
   }
 
   private startOfLine() {
+    this.textBuffer.resetSelectionRegion()
     this.textBuffer.moveToColumn(0)
-    this.drawCursor()
+    this.draw()
   }
 
   private endOfLine() {
+    this.textBuffer.resetSelectionRegion()
     this.textBuffer.moveToEndOfLine()
-    this.drawCursor()
+    this.draw()
   }
 
   private startOfText() {

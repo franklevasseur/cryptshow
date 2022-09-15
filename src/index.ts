@@ -106,12 +106,18 @@ void yargs
   )
   .command(
     ['edit <fileName>'],
-    'Edit file',
+    'Create or edit file',
     (yargs) => yargs.positional('fileName', { type: 'string', demandOption: true }),
     async (argv) => {
       const pwd = await getPwd()
-      const fileContent = fs.readFileSync(argv.fileName, 'utf8')
-      const decrypted = decrypt(fileContent, pwd)
+
+      let decrypted: string
+      if (fs.existsSync(argv.fileName)) {
+        const fileContent = fs.readFileSync(argv.fileName, 'utf8')
+        decrypted = decrypt(fileContent, pwd)
+      } else {
+        decrypted = ''
+      }
 
       let edited: string
       try {
